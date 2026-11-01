@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>함께메모</title>
+  <meta name="description" content="친구와 함께 쓰는 메모장">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='10' y='10' width='80' height='80' rx='16' fill='%23ffe680'/><path d='M28 38h44M28 52h44M28 66h28' stroke='%232b2a26' stroke-width='7' stroke-linecap='round'/></svg>">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div id="boot" class="boot"><span class="spinner"></span></div>
+
+  <!-- ================= 로그인 / 회원가입 ================= -->
+  <section id="auth-view" class="auth" hidden>
+    <div class="auth-card">
+      <div class="brand big"><span class="brand-mark"></span>함께메모</div>
+      <p class="auth-sub">친구와 함께 쓰는 메모장</p>
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab active" data-mode="login">로그인</button>
+        <button type="button" class="tab" data-mode="signup">회원가입</button>
+      </div>
+      <form id="auth-form" novalidate>
+        <label class="field signup-only" hidden>
+          <span>이름</span>
+          <input name="name" autocomplete="name" maxlength="40" placeholder="친구에게 보일 이름">
+        </label>
+        <label class="field">
+          <span>이메일</span>
+          <input name="email" type="email" required autocomplete="email" placeholder="you@example.com">
+        </label>
+        <label class="field">
+          <span>비밀번호</span>
+          <input name="password" type="password" required minlength="6" autocomplete="current-password" placeholder="6자 이상">
+        </label>
+        <button class="btn primary block" type="submit" id="auth-submit">로그인</button>
+        <p id="auth-msg" class="form-msg" role="status"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ================= 메인 ================= -->
+  <div id="app-view" class="shell" hidden>
+
+    <!-- 왼쪽 세로 메뉴 -->
+    <nav class="rail" aria-label="주 메뉴">
+      <button class="rail-btn" data-tab="friends" title="친구" aria-label="친구">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4.2"/><path d="M3.5 21c.8-4.4 4.3-7 8.5-7s7.7 2.6 8.5 7z"/></svg>
+        <span class="rail-badge" id="badge-friends"></span>
+      </button>
+      <button class="rail-btn" data-tab="memos" title="메모장" aria-label="메모장">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h11l4 4v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm3 7h8v-1.6H8zm0 4h8v-1.6H8zm0 4h5v-1.6H8z" fill-rule="evenodd"/></svg>
+        <span class="rail-badge" id="badge-memos"></span>
+      </button>
+      <span class="rail-spacer"></span>
+      <button class="rail-btn me-btn" id="btn-profile" title="내 프로필" aria-label="내 프로필"><span id="rail-avatar"></span></button>
+      <button class="rail-btn" id="btn-logout" title="로그아웃" aria-label="로그아웃">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h5v-2H6V6h4zm5.6 3.4-1.4 1.4 2.2 2.2H9v2h7.4l-2.2 2.2 1.4 1.4L20.2 12z"/></svg>
+      </button>
+    </nav>
+
+    <!-- 목록 패널 -->
+    <section class="list-panel">
+      <header class="list-head">
+        <h1 id="list-title">친구</h1>
+        <div class="head-actions">
+          <button class="icon-btn" id="btn-search" title="검색" aria-label="검색">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3a7.5 7.5 0 0 1 6 12l4.3 4.3-1.4 1.4-4.3-4.3A7.5 7.5 0 1 1 10.5 3zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11z"/></svg>
+          </button>
+          <button class="icon-btn" id="btn-add" title="추가" aria-label="추가">
+            <svg viewBox="0 0 24 24" aria-hidden="true" id="add-icon"></svg>
+          </button>
+        </div>
+      </header>
+      <div class="list-search" id="list-search" hidden>
+        <input type="search" id="search-input" placeholder="이름 검색" aria-label="검색어">
+      </div>
+      <div class="list-body" id="list-body"></div>
+    </section>
+
+    <!-- 메모장 화면 -->
+    <main class="room" id="room" data-color="yellow">
+      <div class="room-empty" id="room-empty">
+        <div class="empty-art"></div>
+        <p>메모장을 선택하면<br>주고받은 메모가 여기에 표시됩니다.</p>
+      </div>
+
+      <div class="room-inner" id="room-inner" hidden>
+        <header class="room-head">
+          <button class="icon-btn back-btn" id="room-back" aria-label="목록으로">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 5.4 14 4l-8 8 8 8 1.4-1.4L8.8 12z"/></svg>
+          </button>
+          <span class="room-icon" id="room-icon"></span>
+          <div class="room-titles">
+            <h2 id="room-title"></h2>
+            <button class="member-count" id="room-members-btn" title="참여자 보기">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c.7-3.8 3.9-6 8-6s7.3 2.2 8 6z"/></svg>
+              <span id="room-count"></span>
+              <span class="who-stack" id="room-who"></span>
+            </button>
+          </div>
+          <div class="room-actions">
+            <button class="icon-btn" id="room-search-btn" title="메모 검색" aria-label="메모 검색">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3a7.5 7.5 0 0 1 6 12l4.3 4.3-1.4 1.4-4.3-4.3A7.5 7.5 0 1 1 10.5 3zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11z"/></svg>
+            </button>
+            <button class="icon-btn" id="room-menu-btn" title="참여자·설정" aria-label="참여자·설정">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+            </button>
+          </div>
+        </header>
+        <div class="room-search" id="room-search" hidden>
+          <input type="search" id="room-search-input" placeholder="이 메모장에서 검색" aria-label="메모 검색어">
+          <span id="room-search-count"></span>
+        </div>
+
+        <div class="messages" id="messages" aria-live="polite"></div>
+
+        <form class="composer" id="composer">
+          <textarea id="msg-input" rows="3" placeholder="메모 입력" maxlength="4000" aria-label="메모 입력"></textarea>
+          <div class="composer-bar">
+            <span class="composer-hint">Enter 전송 · Shift+Enter 줄바꿈</span>
+            <button type="submit" class="send-btn" id="send-btn" disabled>전송</button>
+          </div>
+        </form>
+
+        <!-- 참여자·설정 패널 -->
+        <aside class="drawer" id="drawer" hidden>
+          <div class="drawer-head">
+            <h3>참여자·설정</h3>
+            <button class="icon-btn" id="drawer-close" aria-label="닫기">✕</button>
+          </div>
+          <div class="drawer-body" id="drawer-body"></div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <!-- ================= 다이얼로그 ================= -->
+  <!-- 친구 추가 -->
+  <dialog id="dlg-add-friend" class="dialog small">
+    <form id="add-friend-form">
+      <div class="dlg-head"><h2>친구 추가</h2><button type="button" class="icon-btn" data-close aria-label="닫기">✕</button></div>
+      <div class="dlg-body">
+        <label class="field">
+          <span>친구의 이메일</span>
+          <input name="email" type="email" required placeholder="friend@example.com">
+        </label>
+        <p class="hint">상대가 수락하면 서로 친구가 됩니다. 친구가 되어도 내가 초대한 메모장만 볼 수 있습니다.</p>
+        <p class="form-msg" id="add-friend-msg"></p>
+      </div>
+      <div class="dlg-foot">
+        <button type="button" class="btn ghost" data-close>취소</button>
+        <button type="submit" class="btn primary">요청 보내기</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 새 메모장 -->
+  <dialog id="dlg-new-memo" class="dialog">
+    <form id="new-memo-form">
+      <div class="dlg-head"><h2>새 메모장</h2><button type="button" class="icon-btn" data-close aria-label="닫기">✕</button></div>
+      <div class="dlg-body">
+        <label class="field">
+          <span>메모장 이름</span>
+          <input name="title" required maxlength="100" placeholder="예: 주말 여행 계획">
+        </label>
+        <div class="field">
+          <span>색상</span>
+          <div class="swatches" id="new-memo-colors"></div>
+        </div>
+        <div class="field">
+          <span>함께 쓸 친구 <small class="muted" id="new-memo-picked"></small></span>
+          <div class="picker" id="new-memo-picker"></div>
+          <p class="hint">선택한 친구만 이 메모장을 볼 수 있습니다. 나중에 더 초대할 수도 있습니다.</p>
+        </div>
+      </div>
+      <div class="dlg-foot">
+        <button type="button" class="btn ghost" data-close>취소</button>
+        <button type="submit" class="btn primary">만들기</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- 친구 프로필 -->
+  <dialog id="dlg-friend" class="dialog small">
+    <div class="dlg-head"><h2>친구</h2><button type="button" class="icon-btn" data-close aria-label="닫기">✕</button></div>
+    <div class="dlg-body" id="friend-body"></div>
+  </dialog>
+
+  <!-- 내 프로필 -->
+  <dialog id="dlg-profile" class="dialog small">
+    <form id="profile-form">
+      <div class="dlg-head"><h2>내 프로필</h2><button type="button" class="icon-btn" data-close aria-label="닫기">✕</button></div>
+      <div class="dlg-body">
+        <label class="field"><span>이름</span><input name="display_name" required maxlength="40"></label>
+        <label class="field"><span>상태메시지</span><input name="status_message" maxlength="60" placeholder="친구에게 보일 한마디"></label>
+        <p class="hint" id="profile-email"></p>
+      </div>
+      <div class="dlg-foot">
+        <button type="button" class="btn ghost" data-close>취소</button>
+        <button type="submit" class="btn primary">저장</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+</body>
+</html>
